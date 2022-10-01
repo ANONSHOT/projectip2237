@@ -1,0 +1,38 @@
+def main_menu():
+ch=0
+  print("                     ==============================")
+  print("                             Main Menu")
+  print("                     ==============================")
+  while ch!=7:
+    print("""
+         ________________________________________________________
+         | 1. Show DataFrame.                                 |
+         | 2. Add district data into CSV.                       |
+         | 3. Edit a record                                      |
+         | 4. Delete a record.                       |
+         | 5. Line Graph
+         | 6. Bar Graph.                                   |
+         | 7. Exit
+         |                                        |
+         | 
+         _________________________________________________________
+          """)
+    ch=int(input("Enter your choice:"))
+    if ch==1:
+      showData()
+    elif ch==2:
+      enter_data()
+    elif ch==3:
+      edit_data()
+    elif ch==4:
+      delete_data()
+    elif ch==5:
+      line_chart()
+    elif ch==6:
+      bar_chart()
+    elif ch==7:
+      print("Thanks For visiting Covid Data Analysis E-Website")
+      return
+      break
+      #Choice codes Not Done .. Let me Think 
+main_menu()
