@@ -1,0 +1,480 @@
+import tkinter
+import requests
+import numpy as np
+from bs4 import BeautifulSoup as soup
+import requests
+import pandas as pd
+import sys, os, signal, colorama
+from tkinter import *
+from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
+from PIL import Image, ImageTk
+from covid import Covid
+import tkinter as tk
+
+import requests
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
+from tkinter import ttk
+
+r = requests.get('https://pomber.github.io/covid19/timeseries.json')
+data = r.json()
+
+root = Tk()
+root.geometry("650x720")
+
+root.title("Covid-19 Data")
+colorama.init()  # Color init for Windows
+
+r = requests.get('https://pomber.github.io/covid19/timeseries.json')
+data = r.json()
+
+# =======================
+# #    DEFINES
+# # =======================
+
+colors = {
+    "info": "35m",  # Orange for info messages
+    "error": "31m",  # Red for error messages
+    "ok": "32m",  # Green for success messages
+    "menu2c": "\033[46m",  # Light blue menu
+    "menu1c": "\033[44m",  # Blue menu
+    "close": "\033[0m"  # Color coding close
+}
+cc = "\033[0m"
+ct = "\033[101m"
+cs = "\033[41m"
+c1 = colors["menu1c"]
+c2 = colors["menu2c"]
+
+# =======================
+#    USER CONFIG
+# =======================
+programtitle = "COVID ANALYSIS"
+
+menu1_colors = {
+    "ct": ct,
+    "cs": cs,
+    "opt": c1
+}
+menu1_options = {
+    "title": "Main Menu",
+    "1": "World Cases",
+    "2": "Show Data",
+    "3": "ADD Data",
+    "4": "Edit Data",
+    "5": "DELETE DATA",
+    "6": "LINE GRAPH",
+    "7": "BAR GRAPH",
+    "8": "Quit (or use CNTRL+C)",
+}
+
+
+def printWithColor(color, string):
+    print("\033[" + colors[color] + " " + string + cc)
+
+
+def printError():
+    printWithColor("error", "Error!!")
+    return 1
+
+
+def printSuccess():
+    printWithColor("ok", "Success!!")
+    return 0
+
+
+# Exit program
+def exit():
+    sys.exit()
+
+
+# Handles the CNTRL+C to leave properly the script
+def sigint_handler(signum, frame):
+    print("CNTRL+C exit")
+    sys.exit(0)
+
+
+def displayData():
+    covid = Covid(source='worldometers')
+    cases = []
+    confirmed = []
+    active = []
+    deaths = []
+    recovered = []
+    try:
+        root.update()
+        countries = data.get()
+        country_names = countries.strip()
+        country_names = country_names.replace(" ", ",")
+        country_names = country_names.split(",")
+        for country in country_names:
+            cases.append(covid.get_status_by_country_name(country))
+            root.update()
+
+        for case in cases:
+            confirmed.append(case['confirmed'])
+            active.append(case['active'])
+            deaths.append(case['deaths'])
+            recovered.append(case['recovered'])
+
+        confirmed_patch = mpatches.Patch(color='red', label='Confirmed')
+        active_patch = mpatches.Patch(color='blue', label='Active')
+        recovered_patch = mpatches.Patch(color='green', label='Recovered')
+        deaths_patch = mpatches.Patch(color='black', label='Deaths')
+
+        plt.legend(handles=[confirmed_patch, active_patch, recovered_patch, deaths_patch])
+        for country in range(len(country_names)):
+            plt.bar(country_names[country], confirmed[country], color="red")
+            plt.bar(country_names[country], active[country], color="blue")
+            plt.bar(country_names[country], recovered[country], color="green")
+            plt.bar(country_names[country], deaths[country], color="black")
+
+        plt.title('Current Covid-19 Cases')
+        plt.xlabel('Country Name')
+        plt.ylabel('Cases (in millions)')
+        plt.show()
+    except Exception as e:
+        print(f"Enter correct details country. \n {e}")
+
+
+img = ImageTk.PhotoImage(Image.open(r"C:\\Users\USER\Downloads\th.jpg"))
+panel = Label(root, image=img)
+panel.pack(fill="both")
+Label(root, text="Enter Countries Name", font="Raleway 18").pack()
+data = StringVar()
+entry = Entry(root, textvariable=data, width=70).pack()
+Button(root, text="Get Data", command=displayData).pack()
+root.mainloop()
+
+
+# Menu template
+class menu_template():
+
+    def __init__(self, options, colors):
+        self.menu_width = 50  # Width in characters of the printed menu
+        self.options = options
+        self.colors = colors
+
+
+    def createMenuLine(self, letter, color, length, text):
+        menu = color + " [" + letter + "] " + text
+        line = " " * (length - len(menu))
+        return menu + line + cc
+
+    def createMenu(self, size):
+        line = self.colors["ct"] + " " + programtitle
+        line += " " * (size - len(programtitle) - 6)
+        line += cc
+        print(line)  # Title
+        line = self.colors["cs"] + " " + self.options["title"]
+        line += " " * (size - len(self.options["title"]) - 6)
+        line += cc
+        print(line)  # Subtitle
+        for key in self.options:
+            if (key != "title"):
+                print(self.createMenuLine(key, self.colors["opt"], size, self.options[key]))
+
+    def printMenu(self):
+        self.createMenu(self.menu_width)
+
+
+    def action(self, ch):
+        if ch == '1':
+            displayData()
+        elif ch == '2':
+            self.show_data()
+        elif ch == "3":
+            self.login()
+        elif ch == '4':
+            self.Enter_data()
+        elif ch == '5':
+            self.edit_data()
+        elif ch == '6':
+            self.del_data()
+        elif ch == '7':
+            self.line_chart()
+        elif ch == '8':
+            self.bar_chart()
+        elif ch == '9':
+            sys.exit()
+        else:
+            printError()
+
+    def login(self):
+        from colorama import Fore
+        print('\033[1;34m')
+
+        print("Initializing Covid-19 Tracker")
+        print("----------------------------")
+        print("\n")
+
+        import datetime
+
+        now = datetime.datetime.now()
+        print(now)
+        print("\n")
+
+        name = input("What is your name?")
+
+        print("Welcome " + name)
+
+    password = str(input("Login Password:>>"))
+
+    if password == "surya":
+        print("User Authenticated")
+
+
+    elif password != "surya":
+        print("Password Denied")
+        exit()
+    print("\n")
+
+    url = "https://www.worldometers.info/coronavirus/"
+    r = requests.get(url)
+    s = soup(r.text, "html.parser")
+    data = s.find_all("div", class_="maincounter-number")
+    status = s.find_all("div", class_="number-table-main")
+    active = s.find_all("span", class_="number-table")
+    per = s.find_all("strong")
+    country = s.find_all("td")
+    cou = []
+
+    for a in country:
+        cou.append(a.text)
+    print("Covid-19 Python Tracker")
+    print("Enter Country Name (First Letter In CAPITAL):>>")
+    c = input()
+    if c == "":
+        c = "World"
+    b = cou.index(c)
+
+    print(cou[b].upper() + " Total Number Of Cases:" + cou[b + 1] + "   New Number Of Cases:" + cou[
+        b + 2] + "   Total Number Of Deaths:" + cou[b + 3] + "   New Number Of Deaths:" + cou[
+              b + 4] + " Number Of People Recovered:" + cou[b + 5] + "   Active Number Of Cases:" + cou[
+              b + 6] + "   Serious Number Of Cases:" + cou[b + 7] + "   cases/1Mpop:" + cou[
+              b + 8] + "   deaths/1Mpop:" +
+          cou[b + 9] + "   tests:" + cou[b + 10] + "  tests/1Mpop:" + cou[b + 11])
+
+    print("\nGlobal Results")
+    print("Total Number Of Cases: " + data[0].text.strip())
+    print("Total Number Of Deaths: " + data[1].text.strip())
+    print("Total Number Of Recovered: " + data[2].text.strip())
+    print("Active Number Of Cases: " + status[0].text.strip() + "\t\t--Mild: " + active[0].text.strip() + " (" + per[
+        2].text.strip() + "%)\t\t--Critical: " + active[1].text.strip() + " (" + per[3].text.strip() + "%)")
+    print("Closed Cases: " + status[1].text.strip() + "\t\t--Discharged: " + active[2].text.strip() + " (" + per[
+        4].text.strip() + "%)\t--Deaths: " + active[3].text.strip() + " (" + per[5].text.strip() + "%)")
+
+    print("\n")
+
+    import time
+
+    time.sleep(2)
+
+
+    def show_data(self):
+        df = pd.read_csv("covid_19.csv")
+        print(df)
+        input("Press any key to continue")
+
+    def edit_data(self):
+        df = pd.read_csv("Covid_19.csv")
+        di = input("Enter the State Name:")
+        colu = input("Enter The Column To UpDate>>")
+        values = input("Enter Records:>>")
+        df.loc[df[df["State"] == di].index.values, colu] = values
+        df.to_csv("Covid_19.csv")
+        print("Record Has Been Updated..")
+        input("Press Any key TO Continue")
+
+    def Enter_data(self):
+        print("Insert Data of into The Record:")
+        d = eval(input("Enter the State Name:>>"))
+        pcase = eval("Enter no. Of Confirmed Cases:>>")
+        rcase = eval("Enter no . Of Recovered Cases:>>")
+        death = eval("Enter no. of Death cases:>>")
+        active = eval("Enter no. Of Actuve Cases:>>")
+        p = {'States2': d, 'Confirmed': pcase, 'Recovered': rcase, 'Deaths': death, 'Active': active}
+        df = pd.DataFrame(p)
+        df.to_csv("Covid_19.csv", mode='a', index=False, head=False)
+        print("Data Entered")
+        input("Press Any Key To Continue....")
+
+    def del_data(self):
+        di = input("Enter the State Name")
+        df = pd.read_csv("Covid_19.csv")
+        df = df[df.Districts]
+        df.to_csv("Covid_19.csv", index=False)
+        print("Record Deleted...")
+        input("'Press any key to continue")
+
+    def line_chart(self):
+        df = pd.read_csv("Covid_19.csv")
+        state = df["State"]
+        con = df["Confirmed"]
+        rec = df["Recovered"]
+        death = df["Deaths"]
+        active = df["Active"]
+        y = 0
+        print("____________________========================================================________________________")
+        print("                                   LINE GRAPH")
+        print("____________________=========================================================_______________________")
+        print("1.State Wise Confirmed CASES")
+        print("2.State Wise Recovered Cases")
+        print("3.State Wise Death Case")
+        print("4.State Wise Active Cases")
+        print("5.All Data")
+        print("Return")
+        print("____________________===========================================================____________________")
+        y = 0
+        while y != 4:
+            y = int(input("Enter the Choice to plot  Line Graph:"))
+        if y == 1:
+            plt.ylabel("Confirmed Cases")
+            plt.title("State Wise Confirmed Cases")
+            plt.plot(state, con, color="b")
+            plt.show()
+        elif y == 2:
+            plt.ylabel("Recovered cases")
+            plt.title("State Wise Recovered Cases")
+            plt.plot(state, rec, color="b")
+            plt.show()
+        elif y == 3:
+            plt.ylabel("Death Cases")
+            plt.title("State Wise Death Report")
+            plt.plot(state, death, color="b")
+            plt.show()
+        elif y == 4:
+            plt.ylabel("Active Cases")
+            plt.title("State Wise active Cases")
+            plt.plot(state, active, color="b")
+            plt.show()
+        elif y == 5:
+            plt.ylabel("Number OF Cases:")
+            plt.plot(state, con, color='b', label='State Wise Confurmd Cases')
+            plt.plot(state, rec, color='g', label='State Wise Recovered Cases')
+            plt.plot(state, death, color='c', label='State Wise Death Cases')
+            plt.plot(state, active, color='r', label='State Wise Active Cases')
+            plt.legend()
+            plt.show()
+        elif y == 6:
+            print("Closing Line Graph Interface")
+        else:
+            print("Sorry Invalid Option..")
+
+    def bar_chart(self):
+        df = pd.read_csv("Covid_19.csv")
+        state = df["State"]
+        con = df["Confirmed"]
+        rec = df["Recovered"]
+        death = df["Deaths"]
+        active = df["Active"]
+        Y = 0
+        print("____________________========================================================________________________")
+        print("                                   BAR GRAPH")
+        print("____________________=========================================================_______________________")
+        print("1.State Wise Confirmed CASES")
+        print("2.State Wise Recovered Cases")
+        print("3.State Wise Death Case")
+        print("4.State Wise Active Cases")
+        print("5.All Data")
+        print("6.Combine Bar")
+        print("Return")
+        print("____________________===========================================================____________________")
+        y = 0
+        while y != 5:
+            y = int(input("Enter the Choice to plot  BAR Graph:"))
+            if y == 1:
+                plt.ylabel("Confirmed Cases")
+                plt.title("State Wise Confirmed Cases")
+                plt.bar(state, con, color="b", width=0.5)
+                plt.show()
+            elif y == 2:
+                plt.ylabel("Recovered cases")
+                plt.title("State Wise Recovered Cases")
+                plt.bar(state, rec, color="g", width=0.5)
+                plt.show()
+            elif y == 3:
+                plt.ylabel("Death Cases")
+                plt.title("State Wise Death Report")
+                plt.bar(state, death, color="c", width=0.5)
+                plt.show()
+            elif y == 4:
+                plt.ylabel("Active Cases")
+                plt.title("State Wise active Cases")
+                plt.bar(state, active, color="r", width=0.5)
+                plt.show()
+            elif y == 5:
+                plt.ylabel("Number OF Cases")
+                plt.bar(state, con, color='b', width=0.5, label='State Wise Confurmd Cases')
+                plt.bar(state, rec, color='g', width=0.5, label='State Wise Recovered Cases')
+                plt.bar(state, death, color='c', width=0.5, label='State Wise Death Cases')
+                plt.bar(state, active, color='r', widht=0.5, label='State Wise Active Cases')
+                plt.legend()
+                plt.show()
+            elif y == 6:
+                d = np.arange(len(state))
+                w = 0.25
+                plt.bar(d, con, w, color='b', label='Sate Wise Confirmed Case')
+                plt.bar(d + 0.25, rec, w, color='g', label='Sate Wise Recovered Case')
+                plt.bar(d + 0.50, death, w, color='c', label='Sate Wise Death Case')
+                plt.bar(d + 0.75, active, w, color='r', label='Sate Wise Active Case')
+                plt.legend()
+                plt.show()
+            elif y == 7:
+                print('Closing Bar Graph.....')
+            else:
+                print("Sorry Invalid Option..")
+
+
+class menu1(menu_template):
+    pass
+
+
+class menu_handler:
+
+    def __init__(self):
+        self.current_menu = "main"
+        self.m1 = menu1(menu1_options, menu1_colors)
+
+    def menuExecution(self):
+        if self.current_menu == "main":
+            self.m1.printMenu()
+        choice = input(" >> ")
+        if self.current_menu == "main":
+            if choice == "9":
+                self.current_menu = "second"
+            else:
+                self.actuator(0, choice)
+        if choice == "1":
+            displayData()
+        else:
+            if choice == "2":
+                self.m1.show_data()
+            if choice == "3":
+                self.m1.Enter_data()
+            if choice == "4":
+                self.m1.edit_data()
+            if choice == "5":
+                self.m1.del_data()
+            if choice == "6":
+                self.m1.line_chart()
+            if choice == "7":
+                self.m1.bar_chart()
+
+        print("\n")
+
+    def actuator(self, type, ch):
+        if type == 0:
+            self.m1.action(ch)
+
+
+# Main Program
+if __name__ == "__main__":
+    x = menu_handler()
+    signal.signal(signal.SIGINT, sigint_handler)
+    while True:
+        x.menuExecution()
